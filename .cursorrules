@@ -28,6 +28,9 @@
     "system_info": {
       "current_year": "2025"
     },
+    "file_creation": {
+      "rule": "Don't use mkdir, create files directly in their target locations"
+    },
     "context_check": {
       "sequence": [
         "Check latest assessment",
