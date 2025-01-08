@@ -54,8 +54,8 @@
     "version_control": {
       "save": "When user says 'save', run git commit -a -m with a descriptive commit message"
     },
-    "system_check": {
-      "restart": "When user says 'restart', read all files and review for alignment and contradictions"
+    "status": {
+      "status": "When user says 'status', read all files and review for alignment and contradictions"
     },
     "research": {
       "think": "When user says 'think', only output research and analysis without making any code changes"
