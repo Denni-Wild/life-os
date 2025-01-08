@@ -310,8 +310,19 @@ Communication Tips 💬
 - Ask your AI coach anything
 - Get command examples
 - Learn best practices
-- Check `memory/` for details
+- Check `MEMORY.md` for details
 
-## 🔧 Technical Details
+## 🔧 Memory Version Control
 
-For system documentation and technical details, see `memory/README.md`
+The `memory/` directory is ignored by the main repository's git to keep your personal data private. To maintain version control of your personal data:
+
+1. Initialize a new git repository inside the `memory/` directory:
+
+   ```bash
+   cd memory
+   git init
+   ```
+
+2. This creates a separate repository for your personal data
+3. You can use any git hosting service (GitHub, GitLab, etc.) for this repository
+4. Make sure to use a private repository to protect your personal information

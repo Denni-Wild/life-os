@@ -28,18 +28,18 @@
 
 ```
 .
-├── inbox.md           # Initial capture point
-├── tasks/            # Task management
-│   ├── projects.md     # Project plans and documentation
-│   ├── someday.md      # Future possibilities
-│   ├── waiting.md      # Delegated items
-│   └── next-actions.md # Context-based actions
-└── memory/             # Knowledge base
-    ├── assessments/    # Life area evaluations
-    ├── templates/      # Standard formats
-    ├── decisions/      # Major choices
-    ├── objectives/     # Goals and OKRs
-    └── reference/      # Support materials
+└── memory/                 # Knowledge base
+    ├── assessments/        # Life area evaluations
+    ├── templates/          # Standard formats
+    ├── decisions/          # Major choices
+    ├── objectives/         # Goals and OKRs
+    ├── reference/          # Support materials
+    └── gtd/                # Get Things Done (Task Management)
+        ├── inbox.md        # Initial capture point
+        ├── projects.md     # Project plans and documentation
+        ├── someday.md      # Future possibilities
+        ├── waiting.md      # Delegated items
+        └── next-actions.md # Context-based actions
 ```
 
 ## Processing Flow

@@ -9,6 +9,10 @@
     "rule_management": {
       "rule": "When user says 'rule', add the specified rule to .cursorrules"
     },
+    "memory_structure": {
+      "rule": "MEMORY.md describes structure of memory",
+      "enforce": "Keep MEMORY.md in sync with actual directory structure and system documentation"
+    },
     "version_control": {
       "save": "When user says 'save', run git commit -a -m with a descriptive commit message"
     },
