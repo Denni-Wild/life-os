@@ -98,9 +98,9 @@
   },
   "commands": {
     "scripts": {
-      "todos:add": "npm run todos:add - Add actionable task to Todoist with due date",
-      "todoist:sync": "npm run todoist:sync import - Sync tasks from Todoist to memory",
-      "email:list": "npm run email:list"
+      "npm run todoist:sync import": "Sync tasks from Todoist to memory",
+      "npm run todoist:sync export": "Sync tasks from memory to Todoist",
+      "npm run email:list": "Read emails"
     },
     "files": {
       "inbox": "Open quick capture inbox in memory/inbox.md for initial collection",
