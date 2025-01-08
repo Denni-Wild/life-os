@@ -30,10 +30,10 @@
         ]
       },
       "sync_rules": {
-        "todoist_to_memory": "Import tasks from Todoist to memory",
+        "todoist_to_memory": "Import tasks from Todoist to memory/tasks/todoist.yml",
         "completion": "When tasks are completed in Todoist, move to completed.md with completion date",
         "add_to_memory": "Add new tasks to memory",
-        "memory_to_todoist": "Export tasks from memory to Todoist"
+        "memory_to_todoist": "Export tasks from memory/tasks/todoist.yml to Todoist"
       },
       "task_lifecycle": {
         "capture": "New tasks go to inbox.md first",
