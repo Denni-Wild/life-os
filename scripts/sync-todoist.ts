@@ -247,6 +247,8 @@ async function importFromTodoist() {
 
         fs.writeFileSync(filePath, content);
         console.log(`✅ Written ${tasks.length} tasks to ${filePath}`);
+      } else {
+        console.log(`No tasks found for ${type}`);
       }
     }
   } catch (error) {
