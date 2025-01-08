@@ -76,7 +76,7 @@ Need help? Your AI coach will guide you through each step - just ask!
 Quick commands you can use anytime:
 
 - **save** - Save your progress and changes
-- **restart** - Reset the AI's context and review everything
+- **status** - Review the system's current state and check for alignment and contradictions
 - **think** - Get analysis without making changes
 - **rule** - Add new rules to the system
 - **hi** - Start a coaching conversation
