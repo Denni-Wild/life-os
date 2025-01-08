@@ -99,8 +99,8 @@
   },
   "commands": {
     "scripts": {
-      "npm run todoist:sync import": "Sync tasks from Todoist to memory",
-      "npm run todoist:sync export": "Sync tasks from memory to Todoist",
+      "npm run todoist import": "Sync tasks from Todoist to memory",
+      "npm run todoist export": "Sync tasks from memory to Todoist",
       "npm run email:list": "Read emails"
     },
     "files": {

@@ -1,7 +1,9 @@
 import { TodoistApi } from "@doist/todoist-api-typescript";
 import * as dotenv from "dotenv";
+import * as fs from "fs";
+import * as path from "path";
+import { parse, stringify } from "yaml";
 
-// Load environment variables
 dotenv.config();
 
 if (!process.env.TODOIST_API_TOKEN) {
@@ -9,294 +11,186 @@ if (!process.env.TODOIST_API_TOKEN) {
   process.exit(1);
 }
 
-// Initialize the Todoist client
 const api = new TodoistApi(process.env.TODOIST_API_TOKEN);
 
-interface Task {
-  id: string;
-  order: number;
+interface MemoryTask {
   content: string;
-  description: string;
-  projectId?: string | null;
-  sectionId?: string | null;
-  isCompleted: boolean;
-  labels: string[];
-  priority: number;
-  commentCount: number;
-  createdAt: string;
-  url: string;
-  due?: {
-    string: string;
-    date: string;
-    isRecurring: boolean;
-    datetime?: string | null;
-    timezone?: string | null;
-  } | null;
+  created_at: string;
+  due_date?: string;
+  priority?: number;
+  project?: string;
+  labels?: string[];
+  description?: string;
+  todoist_id?: string;
+  completed_at?: string;
 }
 
-async function addTask(content: string, dueDate?: string, priority?: number) {
-  try {
-    const task = await api.addTask({
-      content,
-      dueString: dueDate,
-      priority: priority || 1,
-    });
-    console.log(`✅ Task added: ${task.content}`);
-    return task;
-  } catch (error) {
-    console.error("Error adding task:", error);
-    return null;
+async function ensureDirectoryExists(filePath: string) {
+  const dir = path.dirname(filePath);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
   }
 }
 
-function formatTask(task: Task) {
-  const priority = "!".repeat(task.priority) || "-";
-  const project = task.projectId ? `[${task.projectId}] ` : "";
-  const labels = task.labels?.length ? ` @${task.labels.join(" @")}` : "";
-  const description = task.description
-    ? `\n   Description: ${task.description}`
-    : "";
-  const dueInfo = task.due
-    ? ` (Due: ${task.due.date}${
-        task.due.datetime
-          ? ` at ${task.due.datetime.split("T")[1].slice(0, 5)}`
-          : ""
-      })`
-    : "";
-  const url = `\n   Link: ${task.url}`;
-
-  return `[${priority}] ${project}${task.content}${labels}${dueInfo}${description}${url}`;
+function parseYamlTasks(content: string): MemoryTask[] {
+  try {
+    const data = parse(content);
+    if (!data || !data.tasks || !Array.isArray(data.tasks)) {
+      return [];
+    }
+    return data.tasks;
+  } catch (error) {
+    console.error("Error parsing YAML:", error);
+    return [];
+  }
 }
 
-async function listTasks() {
+async function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function exportToTodoist() {
   try {
-    const tasks = await api.getTasks();
+    // First get all projects to create a map and ensure they exist
     const projects = await api.getProjects();
-    const projectMap = new Map(projects.map((p) => [p.id, p.name]));
+    const projectMap = new Map<string, string>();
 
-    console.log("\nAll Tasks:");
-    console.log("----------");
+    for (const project of projects) {
+      projectMap.set(project.name, project.id);
+    }
 
-    if (tasks.length === 0) {
-      console.log("No tasks found");
-    } else {
-      // Group tasks by due date
-      const tasksByDate = new Map<string, Task[]>();
-      const noDateTasks: Task[] = [];
+    // Read tasks from memory files
+    const baseDir = "memory/tasks";
+    const taskFiles = ["todoist.yml"];
+    let updatedCount = 0;
 
-      tasks.forEach((task) => {
-        if (task.due?.date) {
-          const date = task.due.date;
-          if (!tasksByDate.has(date)) {
-            tasksByDate.set(date, []);
+    for (const file of taskFiles) {
+      const filePath = path.join(baseDir, file);
+      if (!fs.existsSync(filePath)) continue;
+
+      const content = fs.readFileSync(filePath, "utf-8");
+      const yamlContent = parse(content);
+      const tasks = yamlContent.tasks || [];
+
+      for (const task of tasks) {
+        try {
+          const updateData: any = {
+            content: task.content,
+            priority: task.priority || 1,
+          };
+
+          // Handle project
+          if (task.project) {
+            let projectId = projectMap.get(task.project);
+            if (!projectId) {
+              // Create project if it doesn't exist
+              const newProject = await api.addProject({ name: task.project });
+              await sleep(500); // Rate limiting
+              projectId = newProject.id;
+              projectMap.set(task.project, projectId);
+            }
+            updateData.projectId = projectId;
           }
-          tasksByDate.get(date)!.push(task);
-        } else {
-          noDateTasks.push(task);
+
+          // Handle due date
+          if (task.due_date) {
+            updateData.dueDate = task.due_date;
+          }
+
+          // Handle labels
+          if (task.labels) {
+            updateData.labels = task.labels;
+          }
+
+          // Handle description
+          if (task.description) {
+            updateData.description = task.description;
+          }
+
+          if (task.todoist_id) {
+            // Update existing task
+            await api.updateTask(task.todoist_id, updateData);
+            console.log(`Updated task: ${task.content}`);
+          } else {
+            // Create new task
+            await api.addTask(updateData);
+            console.log(`Created task: ${task.content}`);
+          }
+
+          await sleep(500); // Rate limiting between operations
+          updatedCount++;
+        } catch (taskError: any) {
+          console.error(
+            `Error processing task "${task.content}":`,
+            taskError.message
+          );
+          if (taskError.httpStatusCode === 503) {
+            console.log(
+              "Service temporarily unavailable. Waiting 5 seconds..."
+            );
+            await sleep(5000);
+          }
+          continue;
         }
-      });
-
-      // Sort dates
-      const sortedDates = Array.from(tasksByDate.keys()).sort();
-
-      // Print tasks by date
-      sortedDates.forEach((date) => {
-        const tasksForDate = tasksByDate.get(date)!;
-        console.log(`\n${date}:`);
-        console.log("-".repeat(date.length + 1));
-        tasksForDate.forEach((task) => {
-          const taskWithProjectName = {
-            ...task,
-            projectId: task.projectId
-              ? projectMap.get(task.projectId) || task.projectId
-              : undefined,
-          };
-          console.log(formatTask(taskWithProjectName));
-          console.log(""); // Add empty line between tasks
-        });
-      });
-
-      // Print tasks without due date
-      if (noDateTasks.length > 0) {
-        console.log("\nNo Due Date:");
-        console.log("-----------");
-        noDateTasks.forEach((task) => {
-          const taskWithProjectName = {
-            ...task,
-            projectId: task.projectId
-              ? projectMap.get(task.projectId) || task.projectId
-              : undefined,
-          };
-          console.log(formatTask(taskWithProjectName));
-          console.log(""); // Add empty line between tasks
-        });
       }
     }
-  } catch (error) {
-    console.error("Error fetching tasks:", error);
+
+    console.log(`✅ Updated ${updatedCount} tasks in Todoist`);
+  } catch (error: any) {
+    console.error("Error exporting to Todoist:", error.message);
+    if (error.httpStatusCode) {
+      console.error(`HTTP Status Code: ${error.httpStatusCode}`);
+    }
   }
 }
 
-async function listProjects() {
-  try {
-    const projects = await api.getProjects();
-    console.log("\nProjects:");
-    console.log("---------");
-    projects.forEach((project) => {
-      console.log(`[${project.id}] ${project.name}`);
-    });
-  } catch (error) {
-    console.error("Error fetching projects:", error);
-  }
-}
-
-async function manageContexts() {
-  try {
-    const labels = await api.getLabels();
-    console.log("\nContext Labels:");
-    console.log("--------------");
-    labels.forEach((label) => {
-      console.log(`@${label.name}`);
-    });
-  } catch (error) {
-    console.error("Error fetching labels:", error);
-  }
-}
-
-async function completeTask(taskId: string) {
-  try {
-    await api.closeTask(taskId);
-    console.log(`✅ Task ${taskId} completed`);
-  } catch (error) {
-    console.error("Error completing task:", error);
-  }
-}
-
-async function listUpcoming() {
+async function importFromTodoist() {
   try {
     const tasks = await api.getTasks();
     const projects = await api.getProjects();
     const projectMap = new Map(projects.map((p) => [p.id, p.name]));
-    const today = new Date();
-    const nextWeek = new Date(today);
-    nextWeek.setDate(today.getDate() + 7);
 
-    console.log("\nUpcoming Tasks (Next 7 Days):");
-    console.log("----------------------------");
+    const memoryTasks: MemoryTask[] = tasks.map((task) => ({
+      content: task.content,
+      created_at: task.createdAt,
+      todoist_id: task.id,
+      priority: task.priority,
+      project: task.projectId
+        ? projectMap.get(task.projectId) || undefined
+        : undefined,
+      labels: task.labels,
+      description: task.description || undefined,
+      due_date: task.due?.date,
+    }));
 
-    const upcomingTasks = tasks
-      .filter((task) => {
-        if (!task.due?.date) return false;
-        const dueDate = new Date(task.due.date);
-        return dueDate >= today && dueDate <= nextWeek;
-      })
-      .sort(
-        (a, b) =>
-          new Date(a.due!.date).getTime() - new Date(b.due!.date).getTime()
-      );
+    // Write to memory file
+    const filePath = path.join("memory/tasks", "todoist.yml");
+    ensureDirectoryExists(filePath);
 
-    if (upcomingTasks.length === 0) {
-      console.log("No upcoming tasks for the next 7 days");
-    } else {
-      upcomingTasks.forEach((task) => {
-        const taskWithProjectName = {
-          ...task,
-          projectId: task.projectId
-            ? projectMap.get(task.projectId) || task.projectId
-            : undefined,
-        };
-        console.log(formatTask(taskWithProjectName));
-        console.log(""); // Add empty line between tasks
-      });
-    }
+    const content = {
+      last_synced: new Date().toISOString(),
+      tasks: memoryTasks,
+    };
+
+    fs.writeFileSync(filePath, stringify(content));
+    console.log(`✅ Written ${memoryTasks.length} tasks to ${filePath}`);
   } catch (error) {
-    console.error("Error fetching upcoming tasks:", error);
+    console.error("Error syncing with Todoist:", error);
   }
 }
-
-async function listOverdue() {
-  try {
-    const tasks = await api.getTasks();
-    const projects = await api.getProjects();
-    const projectMap = new Map(projects.map((p) => [p.id, p.name]));
-    const today = new Date();
-
-    console.log("\nOverdue Tasks:");
-    console.log("--------------");
-
-    const overdueTasks = tasks.filter((task) => {
-      if (!task.due?.date) return false;
-      const dueDate = new Date(task.due.date);
-      return dueDate < today;
-    });
-
-    if (overdueTasks.length === 0) {
-      console.log("No overdue tasks");
-    } else {
-      overdueTasks.forEach((task) => {
-        const taskWithProjectName = {
-          ...task,
-          projectId: task.projectId
-            ? projectMap.get(task.projectId) || task.projectId
-            : undefined,
-        };
-        console.log(formatTask(taskWithProjectName));
-        console.log(""); // Add empty line between tasks
-      });
-    }
-  } catch (error) {
-    console.error("Error fetching overdue tasks:", error);
-  }
-}
-
-// Handle command line arguments
-const command = process.argv[2];
-const args = process.argv.slice(3);
 
 async function main() {
+  const command = process.argv[2];
+
   switch (command) {
-    case "add":
-      if (args.length === 0) {
-        console.error(
-          'Usage: npm run todos:add "Task content" [due_date] [priority]'
-        );
-        process.exit(1);
-      }
-      const [content, dueDate, priority] = args;
-      await addTask(
-        content,
-        dueDate,
-        priority ? parseInt(priority) : undefined
-      );
+    case "import":
+      await importFromTodoist();
       break;
-
-    case "projects":
-      await listProjects();
+    case "export":
+      await exportToTodoist();
       break;
-
-    case "contexts":
-      await manageContexts();
-      break;
-
-    case "complete":
-      if (args.length === 0) {
-        console.error("Usage: npm run todos:complete <task_id>");
-        process.exit(1);
-      }
-      await completeTask(args[0]);
-      break;
-
-    case "upcoming":
-      await listUpcoming();
-      break;
-
-    case "overdue":
-      await listOverdue();
-      break;
-
-    case "list":
     default:
-      await listTasks();
+      console.log("Usage: npm run todoist:sync [import|export]");
       break;
   }
 }

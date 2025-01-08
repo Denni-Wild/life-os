@@ -5,14 +5,7 @@
   "main": "index.js",
   "scripts": {
     "email:list": "ts-node scripts/gmail.ts",
-    "todos:list": "ts-node scripts/todoist.ts list",
-    "todos:add": "ts-node scripts/todoist.ts add",
-    "todos:projects": "ts-node scripts/todoist.ts projects",
-    "todos:contexts": "ts-node scripts/todoist.ts contexts",
-    "todos:complete": "ts-node scripts/todoist.ts complete",
-    "todos:upcoming": "ts-node scripts/todoist.ts upcoming",
-    "todos:overdue": "ts-node scripts/todoist.ts overdue",
-    "todoist:sync": "ts-node scripts/sync-todoist.ts"
+    "todoist": "ts-node scripts/todoist.ts"
   },
   "keywords": [],
   "author": "",
@@ -21,10 +14,12 @@
     "@doist/todoist-api-typescript": "^2.1.2",
     "@google-cloud/local-auth": "^2.1.0",
     "@types/node": "^20.10.6",
+    "@types/yaml": "^1.9.7",
     "dotenv": "^16.3.1",
     "googleapis": "^105.0.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "yaml": "^2.7.0"
   },
   "devDependencies": {
     "@types/dotenv": "^8.2.0"
