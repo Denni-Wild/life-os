@@ -1,0 +1,116 @@
+{
+  "config": {
+    "assessment_frequency": "quarterly",
+    "review_frequency": "monthly",
+    "focus_areas_limit": 3,
+    "documentation_path": "memory/README.md"
+  },
+  "meta_rules": {
+    "rule_management": {
+      "rule": "When user says 'rule', add the specified rule to .cursorrules"
+    },
+    "version_control": {
+      "save": "When user says 'save', run git commit -a -m with a descriptive commit message"
+    },
+    "system_check": {
+      "restart": "When user says 'restart', read all files and review for alignment and contradictions"
+    },
+    "research": {
+      "think": "When user says 'think', only output research and analysis without making any code changes"
+    },
+    "persona": {
+      "hi": "When user says 'hi', act as their personal life coach who knows about their life, goals, and progress"
+    },
+    "system_info": {
+      "current_year": "2025"
+    },
+    "context_check": {
+      "sequence": [
+        "Check latest assessment",
+        "Check active plans",
+        "Check latest review",
+        "Check progress markers"
+      ]
+    },
+    "progress_tracking": {
+      "assessment_to_plan": "Link quarterly assessments to active plans",
+      "plan_to_review": "Link monthly reviews to plan progress",
+      "markers": "Track key metrics between reviews"
+    },
+    "activity_tracking": {
+      "regular_activities": {
+        "ask": "When starting first assessment or when user says 'update schedule', ask about regular commitments",
+        "questions": [
+          "What are your regular weekly commitments?",
+          "What time do you usually wake up and go to bed?",
+          "Which days are typically busier for you?",
+          "When do you prefer to do focused work?",
+          "Do you have any regular exercise or wellness routines?",
+          "Are there specific times you reserve for family or relationships?",
+          "What regular activities help you recharge?"
+        ],
+        "store": "Save responses in memory/schedule.md",
+        "use": "Consider these when suggesting tasks and planning"
+      }
+    }
+  },
+  "commands": {
+    "scripts": {
+      "todos:add": "npm run todos:add - Add actionable task to Todoist with due date",
+      "todos:list": "npm run todos:list - View today's actionable tasks in Todoist",
+      "todos:projects": "npm run todos:projects - List and manage Todoist projects",
+      "todos:contexts": "npm run todos:contexts - Manage context labels (@home, @computer, etc)",
+      "todos:complete": "npm run todos:complete - Mark tasks as complete",
+      "todos:upcoming": "npm run todos:upcoming - View tasks for next few days",
+      "todos:overdue": "npm run todos:overdue - Check overdue tasks",
+      "email:list": "npm run email:list"
+    },
+    "files": {
+      "inbox": "Open quick capture inbox in memory/inbox.md for initial collection",
+      "projects": "View project plans and documentation in memory/tasks/projects.md",
+      "someday": "View future possibilities and ideas in memory/tasks/someday.md",
+      "waiting": "View delegated tasks and follow-ups in memory/tasks/waiting.md",
+      "assess": "Start a new Level 10 Life assessment using templates/assessment.md in memory/assessments/",
+      "review": "Check progress on current goals using templates/review.md in memory/objectives/",
+      "reflect": "Quick check-in on specific life area using templates/reflection.md"
+    },
+    "active_plans": "memory/plans/active/ - Currently executing plans by life area"
+  },
+  "file_structure": {
+    "inbox": "memory/inbox.md",
+    "tasks": {
+      "projects": "memory/tasks/projects.md - Project plans and documentation",
+      "someday": "memory/tasks/someday.md - Future possibilities and ideas",
+      "waiting": "memory/tasks/waiting.md - Delegated tasks and follow-ups",
+      "next_actions": "memory/tasks/next-actions.md - Context-based next actions"
+    },
+    "docs": {
+      "assessments": "memory/assessments/ - Life area evaluations",
+      "templates": "templates/ - Standard formats",
+      "decisions": "memory/decisions/ - Major choices and reasoning",
+      "objectives": "memory/objectives/ - Goals and OKRs",
+      "reference": "memory/reference/ - Knowledge base"
+    }
+  },
+  "review_cycles": {
+    "daily": [
+      "Process inbox into Todoist (actionable) or markdown files (reference/future)",
+      "Update next actions",
+      "Quick progress check"
+    ],
+    "weekly": [
+      "Review all lists",
+      "Update project documentation"
+    ],
+    "monthly": [
+      "OKR progress review",
+      "Clean up reference materials",
+      "Archive completed items"
+    ],
+    "quarterly": [
+      "Full Level 10 Life assessment",
+      "Set new OKRs",
+      "System review"
+    ]
+  }
+}
