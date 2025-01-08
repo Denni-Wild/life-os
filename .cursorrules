@@ -99,13 +99,7 @@
   "commands": {
     "scripts": {
       "todos:add": "npm run todos:add - Add actionable task to Todoist with due date",
-      "todos:sync": "npm run todos:sync - Sync tasks from Todoist to memory",
-      "todos:list": "npm run todos:list - View today's actionable tasks in Todoist",
-      "todos:projects": "npm run todos:projects - List and manage Todoist projects",
-      "todos:contexts": "npm run todos:contexts - Manage context labels (@home, @computer, etc)",
-      "todos:complete": "npm run todos:complete - Mark tasks as complete",
-      "todos:upcoming": "npm run todos:upcoming - View tasks for next few days",
-      "todos:overdue": "npm run todos:overdue - Check overdue tasks",
+      "todoist:sync": "npm run todoist:sync import - Sync tasks from Todoist to memory",
       "email:list": "npm run email:list"
     },
     "files": {
