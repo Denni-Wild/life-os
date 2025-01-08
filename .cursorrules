@@ -6,6 +6,41 @@
     "documentation_path": "memory/README.md"
   },
   "meta_rules": {
+    "task_management": {
+      "source_of_truth": "memory/tasks/",
+      "task_structure": {
+        "active": "memory/tasks/active.md - Currently active tasks with due dates",
+        "projects": "memory/tasks/projects.md - Project-based tasks and plans",
+        "someday": "memory/tasks/someday.md - Future possibilities",
+        "waiting": "memory/tasks/waiting.md - Delegated and follow-up tasks",
+        "completed": "memory/tasks/completed.md - Archive of completed tasks"
+      },
+      "task_format": {
+        "required": [
+          "content",
+          "created_at"
+        ],
+        "optional": [
+          "due_date",
+          "priority",
+          "project",
+          "labels",
+          "description",
+          "todoist_id"
+        ]
+      },
+      "sync_rules": {
+        "memory_to_todoist": "When tasks are added/modified in memory, sync to Todoist",
+        "todoist_to_memory": "When retrieving from Todoist, store in appropriate memory files",
+        "completion": "When tasks are completed in Todoist, move to completed.md with completion date"
+      },
+      "task_lifecycle": {
+        "capture": "New tasks go to inbox.md first",
+        "process": "During daily review, move tasks to appropriate lists",
+        "track": "Active tasks get synced with Todoist for daily management",
+        "complete": "Completed tasks are archived with metadata"
+      }
+    },
     "rule_management": {
       "rule": "When user says 'rule', add the specified rule to .cursorrules"
     },
@@ -64,6 +99,7 @@
   "commands": {
     "scripts": {
       "todos:add": "npm run todos:add - Add actionable task to Todoist with due date",
+      "todos:sync": "npm run todos:sync - Sync tasks from Todoist to memory",
       "todos:list": "npm run todos:list - View today's actionable tasks in Todoist",
       "todos:projects": "npm run todos:projects - List and manage Todoist projects",
       "todos:contexts": "npm run todos:contexts - Manage context labels (@home, @computer, etc)",

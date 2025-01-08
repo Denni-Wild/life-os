@@ -11,7 +11,8 @@
     "todos:contexts": "ts-node scripts/todoist.ts contexts",
     "todos:complete": "ts-node scripts/todoist.ts complete",
     "todos:upcoming": "ts-node scripts/todoist.ts upcoming",
-    "todos:overdue": "ts-node scripts/todoist.ts overdue"
+    "todos:overdue": "ts-node scripts/todoist.ts overdue",
+    "todoist:sync": "ts-node scripts/sync-todoist.ts"
   },
   "keywords": [],
   "author": "",
