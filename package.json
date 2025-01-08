@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "email:list": "ts-node scripts/gmail.ts",
-    "todoist": "ts-node scripts/todoist.ts"
+    "todoist": "ts-node scripts/todoist.ts",
+    "watch": "ts-node scripts/watch.ts"
   },
   "keywords": [],
   "author": "",

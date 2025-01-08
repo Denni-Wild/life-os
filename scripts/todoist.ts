@@ -54,22 +54,6 @@ async function sleep(ms: number) {
 
 async function exportToTodoist() {
   try {
-    // Output today's information
-    const now = new Date();
-    const days = [
-      "Sunday",
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-    ];
-    console.log("\nToday is:");
-    console.log(`Day: ${days[now.getDay()]}`);
-    console.log(`Date: ${now.toLocaleDateString()}`);
-    console.log(`Time: ${now.toLocaleTimeString()}\n`);
-
     // First get all projects to create a map and ensure they exist
     const projects = await api.getProjects();
     const projectMap = new Map<string, string>();

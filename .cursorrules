@@ -30,7 +30,8 @@
         ]
       },
       "sync_rules": {
-        "todoist_to_memory": "Learn what date and time it is now and import tasks from Todoist to memory/tasks/todoist.yml",
+        "watch": "Learn what date and time it is now",
+        "todoist_to_memory": " Import tasks from Todoist to memory/tasks/todoist.yml",
         "completion": "When tasks are completed in Todoist, move to completed.md with completion date",
         "add_to_memory": "Add new tasks to memory",
         "memory_to_todoist": "Export tasks from memory/tasks/todoist.yml to Todoist"
@@ -99,6 +100,7 @@
   },
   "commands": {
     "scripts": {
+      "npm run watch": "Learn what date and time it is now",
       "npm run todoist import": "Sync tasks from Todoist to memory",
       "npm run todoist export": "Sync tasks from memory to Todoist",
       "npm run email:list": "Read emails"
