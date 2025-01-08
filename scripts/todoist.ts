@@ -1,4 +1,4 @@
-import { TodoistApi } from "@doist/todoist-api-typescript";
+import { TodoistApi, Task as TodoistTask } from "@doist/todoist-api-typescript";
 import * as dotenv from "dotenv";
 import * as fs from "fs";
 import * as path from "path";
@@ -23,6 +23,9 @@ interface MemoryTask {
   description?: string;
   todoist_id?: string;
   completed_at?: string;
+  to_delete?: boolean;
+  deleted_at?: string;
+  deleted_from?: string;
 }
 
 async function ensureDirectoryExists(filePath: string) {
@@ -51,6 +54,22 @@ async function sleep(ms: number) {
 
 async function exportToTodoist() {
   try {
+    // Output today's information
+    const now = new Date();
+    const days = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
+    console.log("\nToday is:");
+    console.log(`Day: ${days[now.getDay()]}`);
+    console.log(`Date: ${now.toLocaleDateString()}`);
+    console.log(`Time: ${now.toLocaleTimeString()}\n`);
+
     // First get all projects to create a map and ensure they exist
     const projects = await api.getProjects();
     const projectMap = new Map<string, string>();
@@ -63,6 +82,7 @@ async function exportToTodoist() {
     const baseDir = "memory/tasks";
     const taskFiles = ["todoist.yml"];
     let updatedCount = 0;
+    let deletedCount = 0;
 
     for (const file of taskFiles) {
       const filePath = path.join(baseDir, file);
@@ -70,10 +90,23 @@ async function exportToTodoist() {
 
       const content = fs.readFileSync(filePath, "utf-8");
       const yamlContent = parse(content);
-      const tasks = yamlContent.tasks || [];
+      const tasks: MemoryTask[] = yamlContent.tasks || [];
+      let tasksModified = false;
 
       for (const task of tasks) {
         try {
+          // Handle deletion first
+          if (task.to_delete && task.todoist_id) {
+            await api.deleteTask(task.todoist_id);
+            task.deleted_at = new Date().toISOString();
+            task.deleted_from = "memory";
+            tasksModified = true;
+            deletedCount++;
+            console.log(`Deleted task: ${task.content}`);
+            await sleep(500); // Rate limiting
+            continue;
+          }
+
           const updateData: any = {
             content: task.content,
             priority: task.priority || 1,
@@ -113,7 +146,9 @@ async function exportToTodoist() {
             console.log(`Updated task: ${task.content}`);
           } else {
             // Create new task
-            await api.addTask(updateData);
+            const newTask = await api.addTask(updateData);
+            task.todoist_id = newTask.id; // Save the new task ID
+            tasksModified = true;
             console.log(`Created task: ${task.content}`);
           }
 
@@ -133,9 +168,22 @@ async function exportToTodoist() {
           continue;
         }
       }
+
+      // Save updated tasks back to YAML if any new IDs were added or tasks were deleted
+      if (tasksModified) {
+        // Filter out deleted tasks
+        yamlContent.tasks = tasks.filter(
+          (task: MemoryTask) => !task.deleted_at
+        );
+        yamlContent.last_synced = new Date().toISOString();
+        fs.writeFileSync(filePath, stringify(yamlContent));
+        console.log(`✅ Updated task IDs saved to ${filePath}`);
+      }
     }
 
-    console.log(`✅ Updated ${updatedCount} tasks in Todoist`);
+    console.log(
+      `✅ Updated ${updatedCount} tasks and deleted ${deletedCount} tasks in Todoist`
+    );
   } catch (error: any) {
     console.error("Error exporting to Todoist:", error.message);
     if (error.httpStatusCode) {
@@ -146,10 +194,33 @@ async function exportToTodoist() {
 
 async function importFromTodoist() {
   try {
-    const tasks = await api.getTasks();
+    const tasks: TodoistTask[] = await api.getTasks();
     const projects = await api.getProjects();
     const projectMap = new Map(projects.map((p) => [p.id, p.name]));
 
+    // Read existing YAML first
+    const filePath = path.join("memory/tasks", "todoist.yml");
+    let existingContent: { tasks: MemoryTask[] } = { tasks: [] };
+    if (fs.existsSync(filePath)) {
+      existingContent = parse(fs.readFileSync(filePath, "utf-8"));
+    }
+
+    // Create a set of current Todoist IDs
+    const todoistIds = new Set(tasks.map((task) => task.id));
+
+    // Check for deleted tasks
+    existingContent.tasks = existingContent.tasks
+      .map((task: MemoryTask) => {
+        if (task.todoist_id && !todoistIds.has(task.todoist_id)) {
+          // Task exists in YAML but not in Todoist - mark as deleted
+          task.deleted_at = new Date().toISOString();
+          task.deleted_from = "todoist";
+        }
+        return task;
+      })
+      .filter((task: MemoryTask) => !task.deleted_at); // Remove deleted tasks
+
+    // Convert current Todoist tasks to memory format
     const memoryTasks: MemoryTask[] = tasks.map((task) => ({
       content: task.content,
       created_at: task.createdAt,
@@ -164,9 +235,6 @@ async function importFromTodoist() {
     }));
 
     // Write to memory file
-    const filePath = path.join("memory/tasks", "todoist.yml");
-    ensureDirectoryExists(filePath);
-
     const content = {
       last_synced: new Date().toISOString(),
       tasks: memoryTasks,
