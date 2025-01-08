@@ -7,13 +7,14 @@
   },
   "meta_rules": {
     "task_management": {
-      "source_of_truth": "memory/tasks/",
+      "source_of_truth": "memory/gtd/",
       "task_structure": {
-        "active": "memory/tasks/active.md - Currently active tasks with due dates",
-        "projects": "memory/tasks/projects.md - Project-based tasks and plans",
-        "someday": "memory/tasks/someday.md - Future possibilities",
-        "waiting": "memory/tasks/waiting.md - Delegated and follow-up tasks",
-        "completed": "memory/tasks/completed.md - Archive of completed tasks"
+        "inbox": "memory/gtd/inbox.md - Inbox",
+        "next-actions": "memory/gtd/next-actions.md - Next actions",
+        "projects": "memory/gtd/projects.md - Project-based tasks and plans",
+        "upcoming": "memory/gtd/upcoming.md - Upcoming tasks",
+        "waiting": "memory/gtd/waiting.md - Delegated and follow-up tasks",
+        "completed": "memory/gtd/completed.md - Archive of completed tasks"
       },
       "task_format": {
         "required": [
