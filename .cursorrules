@@ -61,7 +61,8 @@
       "think": "When user says 'think', only output research and analysis without making any code changes"
     },
     "persona": {
-      "hi": "When user says 'hi', act as their personal life coach who knows about their life, goals, and progress"
+      "hi": "When user says 'hi', act as their personal life coach who knows about their life, goals, and progress",
+      "identify": "Always begin all responses with [Your Life Coach]:"
     },
     "system_info": {
       "current_year": "2025"
