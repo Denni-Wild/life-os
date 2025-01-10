@@ -28,6 +28,10 @@ interface MemoryTask {
   deleted_from?: string;
 }
 
+interface CompletedTodoistTask extends TodoistTask {
+  completedAt: string;
+}
+
 async function ensureDirectoryExists(filePath: string) {
   const dir = path.dirname(filePath);
   if (!fs.existsSync(dir)) {
@@ -178,7 +182,8 @@ async function exportToTodoist() {
 
 async function importFromTodoist() {
   try {
-    const tasks: TodoistTask[] = await api.getTasks();
+    // Get active tasks
+    const activeTasks = await api.getTasks();
     const projects = await api.getProjects();
     const projectMap = new Map(projects.map((p) => [p.id, p.name]));
 
@@ -190,22 +195,23 @@ async function importFromTodoist() {
     }
 
     // Create a set of current Todoist IDs
-    const todoistIds = new Set(tasks.map((task) => task.id));
+    const todoistIds = new Set(activeTasks.map((task) => task.id));
 
-    // Check for deleted tasks
+    // Check for deleted tasks and mark completed tasks
     existingContent.tasks = existingContent.tasks
       .map((task: MemoryTask) => {
         if (task.todoist_id && !todoistIds.has(task.todoist_id)) {
-          // Task exists in YAML but not in Todoist - mark as deleted
-          task.deleted_at = new Date().toISOString();
-          task.deleted_from = "todoist";
+          // Task exists in YAML but not in Todoist - either deleted or completed
+          if (!task.completed_at) {
+            task.completed_at = new Date().toISOString();
+          }
         }
         return task;
       })
       .filter((task: MemoryTask) => !task.deleted_at); // Remove deleted tasks
 
-    // Convert current Todoist tasks to memory format
-    const memoryTasks: MemoryTask[] = tasks.map((task) => ({
+    // Convert active Todoist tasks to memory format
+    const memoryTasks: MemoryTask[] = activeTasks.map((task: TodoistTask) => ({
       content: task.content,
       created_at: task.createdAt,
       todoist_id: task.id,
@@ -216,16 +222,45 @@ async function importFromTodoist() {
       labels: task.labels,
       description: task.description || undefined,
       due_date: task.due?.date,
+      completed_at: task.isCompleted ? new Date().toISOString() : undefined,
     }));
+
+    // Combine with existing completed tasks
+    const allTasks = [
+      ...memoryTasks,
+      ...existingContent.tasks.filter((task) => task.completed_at),
+    ];
 
     // Write to memory file
     const content = {
       last_synced: new Date().toISOString(),
-      tasks: memoryTasks,
+      tasks: allTasks,
     };
 
     fs.writeFileSync(filePath, stringify(content));
-    console.log(`✅ Written ${memoryTasks.length} tasks to ${filePath}`);
+    const activeCount = memoryTasks.filter((t) => !t.completed_at).length;
+    const completedCount = allTasks.length - activeCount;
+    console.log(
+      `✅ Written ${allTasks.length} tasks (${activeCount} active, ${completedCount} completed) to ${filePath}`
+    );
+
+    // Show git diff for the todoist file
+    const { exec } = require("child_process");
+    exec(
+      "cd memory && git diff tasks/todoist.yml | cat",
+      (error: Error | null, stdout: string, stderr: string) => {
+        if (error) {
+          console.error("Error executing git diff:", error);
+          return;
+        }
+        if (stdout) {
+          console.log("\nChanges in todoist.yml:");
+          console.log(stdout);
+        } else {
+          console.log("\nNo changes in todoist.yml");
+        }
+      }
+    );
   } catch (error) {
     console.error("Error syncing with Todoist:", error);
   }

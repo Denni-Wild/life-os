@@ -30,18 +30,21 @@
           "todoist_id"
         ]
       },
-      "sync_rules": {
-        "watch": "Learn what date and time it is now",
-        "todoist_to_memory": " Import tasks from Todoist to memory/tasks/todoist.yml",
-        "completion": "When tasks are completed in Todoist, move to completed.md with completion date",
-        "add_to_memory": "Add new tasks to memory",
-        "memory_to_todoist": "Export tasks from memory/tasks/todoist.yml to Todoist"
+      "workflow": {
+        "01_import": "First run 'npm run todoist import' so that you see updated from Todoist and to now current time. Todoist tasks are in memory/tasks/todoist.yml",
+        "02_completion": "If you see removed lined in diff, mark those tasks as completed. When tasks are completed in Todoist move to completed.md with completion date",
+        "03_mails": "Check emails for new tasks",
+        "04_add_to_memory": "Ensure you do 01_import, 02_completion ,03_mails first. Then add new tasks to memory",
+        "05_export": "Export tasks from memory/tasks/todoist.yml to Todoist"
       },
       "task_lifecycle": {
         "capture": "New tasks go to inbox.md first",
         "process": "During daily review, move tasks to appropriate lists",
         "track": "Active tasks get synced with Todoist for daily management",
         "complete": "Completed tasks are archived with metadata"
+      },
+      "triggers": {
+        "prios": "When user says 'prios', do the workflow"
       }
     },
     "rule_management": {
