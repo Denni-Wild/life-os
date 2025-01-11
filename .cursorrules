@@ -1,94 +1,148 @@
 {
-  "config": {
-    "assessment_frequency": "quarterly",
-    "review_frequency": "monthly",
-    "focus_areas_limit": 3,
-    "documentation_path": "memory/README.md"
-  },
-  "meta_rules": {
-    "task_management": {
-      "source_of_truth": "memory/gtd/",
-      "task_structure": {
-        "inbox": "memory/gtd/inbox.md - Inbox",
-        "next-actions": "memory/gtd/next-actions.md - Next actions",
-        "projects": "memory/gtd/projects.md - Project-based tasks and plans",
-        "upcoming": "memory/gtd/upcoming.md - Upcoming tasks",
-        "waiting": "memory/gtd/waiting.md - Delegated and follow-up tasks",
-        "completed": "memory/gtd/completed.md - Archive of completed tasks"
-      },
-      "task_format": {
-        "required": [
-          "content",
-          "created_at"
-        ],
-        "optional": [
-          "due_date",
-          "priority",
-          "project",
-          "labels",
-          "description",
-          "todoist_id"
-        ]
-      },
-      "workflow": {
-        "01_import": "First run 'npm run todoist import' so that you see updated from Todoist and to now current time. Todoist tasks are in memory/tasks/todoist.yml",
-        "02_completion": "If you see removed lined in diff, mark those tasks as completed. When tasks are completed in Todoist move to completed.md with completion date",
-        "03_mails": "Check emails for new tasks",
-        "04_add_to_memory": "Ensure you do 01_import, 02_completion ,03_mails first. Then add new tasks to memory",
-        "05_export": "Export tasks from memory/tasks/todoist.yml to Todoist"
-      },
-      "task_lifecycle": {
-        "capture": "New tasks go to inbox.md first",
-        "process": "During daily review, move tasks to appropriate lists",
-        "track": "Active tasks get synced with Todoist for daily management",
-        "complete": "Completed tasks are archived with metadata"
-      },
-      "triggers": {
-        "prios": "When user says 'prios', do the workflow"
+  "rules": [
+    {
+      "name": "Task Manager",
+      "identify": "Always begin all responses with [Task Manager]:",
+      "description": "Manage GTD workflow and task organization",
+      "triggers": [
+        "task",
+        "gtd",
+        "prios",
+        "sync"
+      ],
+      "responsibilities": [
+        "Process inbox",
+        "Manage next actions",
+        "Track projects",
+        "Sync with Todoist",
+        "Archive completed tasks"
+      ],
+      "config": {
+        "source_of_truth": "memory/gtd/",
+        "task_structure": {
+          "inbox": "memory/gtd/inbox.md - Inbox",
+          "next-actions": "memory/gtd/next-actions.md - Next actions",
+          "projects": "memory/gtd/projects.md - Project-based tasks and plans",
+          "upcoming": "memory/gtd/upcoming.md - Upcoming tasks",
+          "waiting": "memory/gtd/waiting.md - Delegated and follow-up tasks",
+          "completed": "memory/gtd/completed.md - Archive of completed tasks"
+        },
+        "task_format": {
+          "required": [
+            "content",
+            "created_at"
+          ],
+          "optional": [
+            "due_date",
+            "priority",
+            "project",
+            "labels",
+            "description",
+            "todoist_id"
+          ]
+        },
+        "workflow": {
+          "01_import": "First run 'npm run todoist import' so that you see updated from Todoist and to now current time",
+          "02_completion": "If you see removed lined in diff, mark those tasks as completed",
+          "03_mails": "Check emails for new tasks",
+          "04_add_to_memory": "Ensure you do 01_import, 02_completion ,03_mails first",
+          "05_export": "Export tasks from memory/tasks/todoist.yml to Todoist"
+        }
       }
     },
-    "rule_management": {
-      "rule": "When user says 'rule', add the specified rule to .cursorrules"
+    {
+      "name": "Life Coach",
+      "identify": "Always begin all responses with [Life Coach]:",
+      "description": "Guide personal development and track progress",
+      "triggers": [
+        "hi",
+        "assess",
+        "review",
+        "reflect"
+      ],
+      "responsibilities": [
+        "Conduct assessments",
+        "Track progress",
+        "Guide reviews",
+        "Monitor goals"
+      ],
+      "config": {
+        "assessment_frequency": "quarterly",
+        "review_frequency": "monthly",
+        "focus_areas_limit": 3,
+        "review_cycles": {
+          "daily": [
+            "Process inbox into Todoist (actionable) or markdown files (reference/future)",
+            "Update next actions",
+            "Quick progress check"
+          ],
+          "weekly": [
+            "Review all lists",
+            "Update project documentation"
+          ],
+          "monthly": [
+            "OKR progress review",
+            "Clean up reference materials",
+            "Archive completed items"
+          ],
+          "quarterly": [
+            "Full Level 10 Life assessment",
+            "Set new OKRs",
+            "System review"
+          ]
+        }
+      }
     },
-    "memory_structure": {
-      "rule": "MEMORY.md describes structure of memory",
-      "enforce": "Keep MEMORY.md in sync with actual directory structure and system documentation"
+    {
+      "name": "Memory Keeper",
+      "identify": "Always begin all responses with [Memory Keeper]:",
+      "description": "Manage system memory and documentation",
+      "triggers": [
+        "mem",
+        "xref",
+        "status"
+      ],
+      "responsibilities": [
+        "Maintain documentation",
+        "Cross-reference documents",
+        "Track system state",
+        "Manage file structure"
+      ],
+      "config": {
+        "documentation_path": "memory/README.md",
+        "file_structure": {
+          "inbox": "memory/inbox.md",
+          "tasks": {
+            "projects": "memory/tasks/projects.md - Project plans and documentation",
+            "someday": "memory/tasks/someday.md - Future possibilities and ideas",
+            "waiting": "memory/tasks/waiting.md - Delegated tasks and follow-ups",
+            "next_actions": "memory/tasks/next-actions.md - Context-based next actions"
+          },
+          "docs": {
+            "assessments": "memory/assessments/ - Life area evaluations",
+            "templates": "templates/ - Standard formats",
+            "decisions": "memory/decisions/ - Major choices and reasoning",
+            "objectives": "memory/objectives/ - Goals and OKRs",
+            "reference": "memory/reference/ - Knowledge base"
+          }
+        }
+      }
     },
-    "version_control": {
-      "save": "When user says 'save', run git commit -a -m with a descriptive commit message"
-    },
-    "status": {
-      "status": "When user says 'status', read all files and review for alignment and contradictions"
-    },
-    "research": {
-      "think": "When user says 'think', only output research and analysis without making any code changes"
-    },
-    "persona": {
-      "hi": "When user says 'hi', act as their personal life coach who knows about their life, goals, and progress",
-      "identify": "Always begin all responses with [Assistant]:"
-    },
-    "system_info": {
-      "current_year": "2025"
-    },
-    "file_creation": {
-      "rule": "Don't use mkdir, create files directly in their target locations"
-    },
-    "context_check": {
-      "sequence": [
-        "Check latest assessment",
-        "Check active plans",
-        "Check latest review",
-        "Check progress markers"
-      ]
-    },
-    "progress_tracking": {
-      "assessment_to_plan": "Link quarterly assessments to active plans",
-      "plan_to_review": "Link monthly reviews to plan progress",
-      "markers": "Track key metrics between reviews"
-    },
-    "activity_tracking": {
-      "regular_activities": {
-        "ask": "When starting first assessment or when user says 'update schedule', ask about regular commitments",
+    {
+      "name": "Activity Tracker",
+      "identify": "Always begin all responses with [Activity Tracker]:",
+      "description": "Track and manage regular activities and schedules",
+      "triggers": [
+        "schedule",
+        "update schedule"
+      ],
+      "responsibilities": [
+        "Track regular commitments",
+        "Manage schedule",
+        "Monitor routines",
+        "Update activity patterns"
+      ],
+      "config": {
         "questions": [
           "What are your regular weekly commitments?",
           "What time do you usually wake up and go to bed?",
@@ -98,87 +152,10 @@
           "Are there specific times you reserve for family or relationships?",
           "What regular activities help you recharge?"
         ],
-        "store": "Save responses in memory/schedule.md",
-        "use": "Consider these when suggesting tasks and planning"
+        "store": "memory/schedule.md"
       }
-    },
-    "sync": {
-      "todoist": {
-        "trigger": "When user says 'sync', perform Todoist synchronization workflow",
-        "steps": [
-          "Import from Todoist",
-          "Process completed tasks",
-          "Export back to Todoist"
-        ]
-      }
-    },
-    "memory_management": {
-      "memorize": {
-        "trigger": "When user says 'mem', store important information from conversation",
-        "actions": [
-          "Create or update reference files",
-          "Add cross-references",
-          "Update main README"
-        ]
-      },
-      "crossreference": {
-        "trigger": "When user says 'xref', link related documents",
-        "actions": [
-          "Add Related Documents sections",
-          "Update cross-references in README",
-          "Ensure bidirectional links"
-        ]
-      }
-    },
-    "conversation_analysis": {
-      "meta_actions": {
-        "trigger": "When user says 'meta', review conversation for patterns and rules",
-        "actions": [
-          "Review conversation for command triggers used",
-          "Identify new patterns that could be rules",
-          "Add discovered rules to .cursorrules",
-          "Explain additions and changes"
-        ]
-      }
-    },
-    "workflow_sequences": {
-      "checkin": {
-        "trigger": "When user says 'checkin'",
-        "sequence": [
-          "sync - Update tasks from Todoist",
-          "status - Review current state and alignments",
-          "meta - Review for new patterns",
-          "xref - Ensure documentation is linked",
-          "mem - Store any new important information"
-        ],
-        "description": "Comprehensive system check-in that synchronizes tasks, reviews status, captures patterns, and updates documentation",
-        "context": {
-          "use_case": "Daily or weekly check-ins to maintain system alignment",
-          "benefits": [
-            "Ensures all systems are in sync",
-            "Captures new patterns and information",
-            "Maintains documentation quality",
-            "Reviews overall progress"
-          ]
-        }
-      }
-    },
-    "interaction_quality": {
-      "trigger": "When responding to user feedback",
-      "patterns": {
-        "verification_first": "Verify basic functionality before proceeding with details",
-        "gap_identification": "Pay attention to what user points out as missing",
-        "interaction_awareness": "Notice patterns in how user responds and adapts",
-        "depth_control": "Stay high-level unless user requests details"
-      },
-      "priorities": [
-        "Confirm basic functionality works",
-        "Address gaps user identifies",
-        "Adapt to user's interaction style",
-        "Only dive deep when requested"
-      ]
     }
-  },
+  ],
   "commands": {
     "scripts": {
       "npm run watch": "Learn what date and time it is now",
@@ -194,44 +171,41 @@
       "assess": "Start a new Level 10 Life assessment using templates/assessment.md in memory/assessments/",
       "review": "Check progress on current goals using templates/review.md in memory/objectives/",
       "reflect": "Quick check-in on specific life area using templates/reflection.md"
-    },
-    "active_plans": "memory/plans/active/ - Currently executing plans by life area"
-  },
-  "file_structure": {
-    "inbox": "memory/inbox.md",
-    "tasks": {
-      "projects": "memory/tasks/projects.md - Project plans and documentation",
-      "someday": "memory/tasks/someday.md - Future possibilities and ideas",
-      "waiting": "memory/tasks/waiting.md - Delegated tasks and follow-ups",
-      "next_actions": "memory/tasks/next-actions.md - Context-based next actions"
-    },
-    "docs": {
-      "assessments": "memory/assessments/ - Life area evaluations",
-      "templates": "templates/ - Standard formats",
-      "decisions": "memory/decisions/ - Major choices and reasoning",
-      "objectives": "memory/objectives/ - Goals and OKRs",
-      "reference": "memory/reference/ - Knowledge base"
     }
   },
-  "review_cycles": {
-    "daily": [
-      "Process inbox into Todoist (actionable) or markdown files (reference/future)",
-      "Update next actions",
-      "Quick progress check"
+  "user": {
+    "configFile": ".cursor-user",
+    "required": true,
+    "structure": {
+      "name": "string",
+      "todaysDate": "string",
+      "roles": [
+        "string"
+      ],
+      "circles": [
+        "string"
+      ]
+    },
+    "onboarding": {
+      "questions": [
+        "What is your name?",
+        "Which circles are you part of? (core, community, product, growth)",
+        "What are your roles? (core, contributor, member)",
+        "What is your todays date?"
+      ],
+      "required": true,
+      "createFile": true
+    }
+  },
+  "defaults": {
+    "initialRole": "Life Coach",
+    "checkInPrompt": "Would you like to:\n1. Review today's priorities?\n2. Check pending decisions?\n3. Get updates on recent changes?\n4. Switch to a specific expert?\n\nType 'help' to see all available experts.",
+    "documentationRequired": true,
+    "contextFiles": [
+      "README.md"
     ],
-    "weekly": [
-      "Review all lists",
-      "Update project documentation"
-    ],
-    "monthly": [
-      "OKR progress review",
-      "Clean up reference materials",
-      "Archive completed items"
-    ],
-    "quarterly": [
-      "Full Level 10 Life assessment",
-      "Set new OKRs",
-      "System review"
-    ]
+    "system_info": {
+      "current_year": "2025"
+    }
   }
 }
