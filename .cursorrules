@@ -162,6 +162,21 @@
           ]
         }
       }
+    },
+    "interaction_quality": {
+      "trigger": "When responding to user feedback",
+      "patterns": {
+        "verification_first": "Verify basic functionality before proceeding with details",
+        "gap_identification": "Pay attention to what user points out as missing",
+        "interaction_awareness": "Notice patterns in how user responds and adapts",
+        "depth_control": "Stay high-level unless user requests details"
+      },
+      "priorities": [
+        "Confirm basic functionality works",
+        "Address gaps user identifies",
+        "Adapt to user's interaction style",
+        "Only dive deep when requested"
+      ]
     }
   },
   "commands": {
