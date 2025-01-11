@@ -101,6 +101,67 @@
         "store": "Save responses in memory/schedule.md",
         "use": "Consider these when suggesting tasks and planning"
       }
+    },
+    "sync": {
+      "todoist": {
+        "trigger": "When user says 'sync', perform Todoist synchronization workflow",
+        "steps": [
+          "Import from Todoist",
+          "Process completed tasks",
+          "Export back to Todoist"
+        ]
+      }
+    },
+    "memory_management": {
+      "memorize": {
+        "trigger": "When user says 'mem', store important information from conversation",
+        "actions": [
+          "Create or update reference files",
+          "Add cross-references",
+          "Update main README"
+        ]
+      },
+      "crossreference": {
+        "trigger": "When user says 'xref', link related documents",
+        "actions": [
+          "Add Related Documents sections",
+          "Update cross-references in README",
+          "Ensure bidirectional links"
+        ]
+      }
+    },
+    "conversation_analysis": {
+      "meta_actions": {
+        "trigger": "When user says 'meta', review conversation for patterns and rules",
+        "actions": [
+          "Review conversation for command triggers used",
+          "Identify new patterns that could be rules",
+          "Add discovered rules to .cursorrules",
+          "Explain additions and changes"
+        ]
+      }
+    },
+    "workflow_sequences": {
+      "checkin": {
+        "trigger": "When user says 'checkin'",
+        "sequence": [
+          "sync - Update tasks from Todoist",
+          "status - Review current state and alignments",
+          "meta - Review for new patterns",
+          "xref - Ensure documentation is linked",
+          "mem - Store any new important information"
+        ],
+        "description": "Comprehensive system check-in that synchronizes tasks, reviews status, captures patterns, and updates documentation",
+        "context": {
+          "use_case": "Daily or weekly check-ins to maintain system alignment",
+          "benefits": [
+            "Ensures all systems are in sync",
+            "Captures new patterns and information",
+            "Maintains documentation quality",
+            "Reviews overall progress"
+          ]
+        }
+      }
     }
   },
   "commands": {
