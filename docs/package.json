@@ -1,0 +1,35 @@
+{
+  "name": "life-coach",
+  "version": "1.0.0",
+  "description": "Personal Life Management System",
+  "main": "index.js",
+  "scripts": {
+    "bot": "python run_bot.py",
+    "bot:dev": "python run_bot.py --dev",
+    "gmail": "python -m bot.services.gmail_service",
+    "todoist": "python -m bot.services.todoist_service",
+    "todoist:import": "python -m bot.services.todoist_service import",
+    "todoist:export": "python -m bot.services.todoist_service export",
+    "watch": "python -m bot.services.watch_service",
+    "email:list": "python -m bot.services.gmail_service"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@doist/todoist-api-typescript": "^2.1.2",
+    "@google-cloud/local-auth": "^2.1.0",
+    "@types/node": "^20.10.6",
+    "@types/yaml": "^1.9.7",
+    "dotenv": "^16.3.1",
+    "googleapis": "^105.0.0",
+    "node-telegram-bot-api": "^0.64.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3",
+    "yaml": "^2.7.0"
+  },
+  "devDependencies": {
+    "@types/dotenv": "^8.2.0",
+    "@types/node-telegram-bot-api": "^0.64.0"
+  }
+}
