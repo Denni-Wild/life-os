@@ -321,6 +321,17 @@ Communication Tips 💬
 - Learn best practices
 - Check `MEMORY.md` for details
 
+## 📚 Документация для пользователей
+
+Полное руководство по использованию Life OS Bot находится в папке `docs/`:
+
+- **[📖 Главная документация](docs/README.md)** - обзор всей системы
+- **[⚡ Быстрый старт](docs/QUICK-REFERENCE.md)** - команды за 5 минут
+- **[📱 Команды бота](docs/COMMANDS-CHEATSHEET.md)** - краткая памятка
+- **[🎯 Постановка целей](docs/GOAL-SETTING-GUIDE.md)** - SMART-принципы
+- **[🌅 Ежедневные практики](docs/DAILY-PRACTICES.md)** - рутины и обзоры
+- **[📚 Полное руководство](docs/USER-GUIDE.md)** - детальное описание
+
 ## 🔧 Memory Version Control
 
 The `memory/` directory is ignored by the main repository's git to keep your personal data private. To maintain version control of your personal data:
