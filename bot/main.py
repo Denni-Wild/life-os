@@ -64,6 +64,9 @@ class LifeOSBot:
         ]
         await app.bot.set_my_commands(commands)
         logger.info("Команды бота настроены")
+        
+        # Отправляем уведомление администратору о запуске
+        await self.send_admin_startup_notification()
     
     def setup_handlers(self):
         """Настройка обработчиков сообщений"""
@@ -122,7 +125,150 @@ class LifeOSBot:
                 content = data.split(":", 1)[1]
                 await self.capture_idea(content, update.effective_chat.id)
                 await query.edit_message_text("💡 Идея захвачена")
-            
+            elif data.startswith("area_score:"):
+                # Обработка оценки жизненных областей (старый формат)
+                parts = data.split(":")
+                if len(parts) == 3:
+                    area = parts[1]
+                    score = int(parts[2])
+                    await self.update_life_area_score(area, score, update.effective_chat.id)
+                    
+                    # Обновляем сообщение с подтверждением
+                    await query.edit_message_text(
+                        f"✅ Оценка области '{area}' обновлена: {score}/10\n\n"
+                        f"Продолжайте оценивать другие области или используйте /status для просмотра всех оценок."
+                    )
+                else:
+                    await query.edit_message_text("❌ Ошибка в данных оценки")
+            elif data.startswith("area_info:"):
+                # Пользователь выбрал область жизни
+                area = data.split(":", 1)[1]
+                context.user_data['selected_area'] = area
+                
+                # Показываем сообщение о выбранной области
+                await query.edit_message_text(
+                    f"🎯 Выбрана область: *{area}*\n\n"
+                    f"Теперь выберите оценку от 1 до 10:",
+                    parse_mode='Markdown',
+                    reply_markup=query.message.reply_markup
+                )
+                
+                # Показываем всплывающее уведомление
+                await query.answer(f"Выбрана область: {area}")
+            elif data.startswith("score_select:"):
+                # Пользователь выбрал оценку
+                if 'selected_area' not in context.user_data:
+                    await query.edit_message_text(
+                        "❌ Сначала выберите область жизни!\n\n"
+                        "Используйте /assess для начала оценки."
+                    )
+                    return
+                
+                score = int(data.split(":", 1)[1])
+                area = context.user_data['selected_area']
+                
+                # Сохраняем оценку
+                await self.update_life_area_score(area, score, update.effective_chat.id)
+                
+                # Очищаем выбранную область
+                del context.user_data['selected_area']
+                
+                # Показываем всплывающее уведомление
+                await query.answer(f"Оценка {area}: {score}/10 сохранена!")
+                
+                # Обновляем сообщение с подтверждением
+                await query.edit_message_text(
+                    f"✅ Оценка области '{area}' обновлена: {score}/10\n\n"
+                    f"Продолжайте оценивать другие области или используйте /status для просмотра всех оценок.",
+                    reply_markup=query.message.reply_markup
+                )
+            elif data == "show_current_scores":
+                # Показываем текущие оценки
+                try:
+                    scores = await self.memory_service.get_life_area_scores()
+                    if scores:
+                        scores_text = "📊 *Текущие оценки жизненных областей:*\n\n"
+                        for area, score in scores.items():
+                            scores_text += f"• {area}: {score}/10\n"
+                    else:
+                        scores_text = "📊 Пока нет сохраненных оценок.\n\nНачните оценку с помощью /assess"
+                    
+                    await query.edit_message_text(
+                        scores_text,
+                        parse_mode='Markdown',
+                        reply_markup=query.message.reply_markup
+                    )
+                    
+                    # Показываем всплывающее уведомление
+                    await query.answer("Текущие оценки загружены")
+                except Exception as e:
+                    logger.error(f"Ошибка при получении оценок: {e}")
+                    await query.edit_message_text(
+                        "❌ Ошибка при получении оценок",
+                        reply_markup=query.message.reply_markup
+                    )
+            elif data.startswith("habit_complete:"):
+                # Пользователь отметил выполнение привычки
+                habit = data.split(":", 1)[1]
+                await self.memory_service.save_habit(habit)
+                
+                # Показываем всплывающее уведомление
+                await query.answer(f"✅ Привычка '{habit}' отмечена!")
+                
+                # Обновляем сообщение с подтверждением
+                await query.edit_message_text(
+                    f"✅ Привычка *{habit.replace('_', ' ').title()}* отмечена!\n\n"
+                    f"Продолжайте отмечать другие привычки или используйте /habits для повторного просмотра.",
+                    parse_mode='Markdown'
+                )
+                
+                logger.info(f"Привычка '{habit}' отмечена пользователем {update.effective_user.id}")
+            elif data == "add_custom_habit":
+                # Пользователь хочет добавить свою привычку
+                await query.edit_message_text(
+                    "✍️ *Добавление новой привычки*\n\n"
+                    "Отправьте название вашей привычки в следующем сообщении.\n\n"
+                    "Например:\n"
+                    "• Пить воду\n"
+                    "• Делать зарядку\n"
+                    "• Читать книги\n\n"
+                    "Или используйте /habits для возврата к списку популярных привычек.",
+                    parse_mode='Markdown'
+                )
+                
+                # Показываем всплывающее уведомление
+                await query.answer("Ожидаю название привычки...")
+                
+                # Устанавливаем состояние ожидания привычки
+                context.user_data['waiting_for_habit'] = True
+            elif data == "habit_category_header":
+                # Заголовок категории привычек (неактивная кнопка)
+                await query.answer("Категория привычек")
+            elif data == "habits_stats":
+                # Показываем статистику привычек
+                try:
+                    habits = await self.memory_service.get_habits_stats()
+                    if habits:
+                        stats_text = "📊 *Статистика привычек:*\n\n"
+                        for habit, count in habits.items():
+                            stats_text += f"• {habit.replace('_', ' ').title()}: {count} раз\n"
+                    else:
+                        stats_text = "📊 Пока нет отмеченных привычек.\n\nНачните отслеживать привычки!"
+                    
+                    await query.edit_message_text(
+                        stats_text,
+                        parse_mode='Markdown',
+                        reply_markup=query.message.reply_markup
+                    )
+                    
+                    # Показываем всплывающее уведомление
+                    await query.answer("Статистика загружена")
+                except Exception as e:
+                    logger.error(f"Ошибка при получении статистики привычек: {e}")
+                    await query.edit_message_text(
+                        "❌ Ошибка при получении статистики привычек",
+                        reply_markup=query.message.reply_markup
+                    )
         except Exception as e:
             logger.error(f"Ошибка при обработке callback: {e}")
             await query.edit_message_text("❌ Произошла ошибка при обработке запроса")
@@ -131,6 +277,24 @@ class LifeOSBot:
         """Обработка обычных текстовых сообщений для быстрого захвата"""
         text = update.message.text
         chat_id = update.effective_chat.id
+        
+        # Проверяем, ожидаем ли мы ввод привычки
+        if context.user_data.get('waiting_for_habit'):
+            # Пользователь вводит название новой привычки
+            await self.memory_service.save_habit(text)
+            
+            # Очищаем состояние ожидания
+            del context.user_data['waiting_for_habit']
+            
+            # Отправляем подтверждение
+            await update.message.reply_text(
+                f"✅ Новая привычка *{text}* добавлена и отмечена!\n\n"
+                f"Используйте /habits для просмотра всех привычек.",
+                parse_mode='Markdown'
+            )
+            
+            logger.info(f"Новая привычка '{text}' добавлена пользователем {update.effective_user.id}")
+            return
         
         # Если сообщение короткое, предлагаем захватить
         if len(text) < 100:
@@ -197,6 +361,48 @@ class LifeOSBot:
             logger.error(f"Ошибка при завершении задачи: {e}")
             raise
     
+    async def send_admin_startup_notification(self):
+        """Отправка уведомления администратору о запуске бота"""
+        if not self.config.admin_user_id:
+            logger.warning("Admin user ID не настроен, уведомление не отправлено")
+            return
+            
+        try:
+            # Получаем информацию о системе
+            import platform
+            import psutil
+            
+            system_info = f"🖥️ {platform.system()} {platform.release()}"
+            python_version = f"🐍 Python {platform.python_version()}"
+            
+            # Получаем информацию о памяти
+            memory = psutil.virtual_memory()
+            memory_info = f"💾 RAM: {memory.used // (1024**3)}GB/{memory.total // (1024**3)}GB"
+            
+            # Получаем текущее время
+            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
+            message = f"""
+🚀 **Life OS Bot запущен!**
+
+⏰ Время запуска: {current_time}
+{system_info}
+{python_version}
+{memory_info}
+
+✅ Бот готов к работе!
+            """.strip()
+            
+            await self.application.bot.send_message(
+                chat_id=self.config.admin_user_id,
+                text=message,
+                parse_mode='Markdown'
+            )
+            logger.info(f"Уведомление о запуске отправлено администратору {self.config.admin_user_id}")
+            
+        except Exception as e:
+            logger.error(f"Ошибка при отправке уведомления администратору: {e}")
+
     def start(self):
         """Запуск бота (синхронный, с ретраями при сетевых сбоях)"""
         backoff_seconds = 5

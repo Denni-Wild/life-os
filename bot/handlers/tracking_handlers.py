@@ -1,5 +1,5 @@
 """
-Обработчики для отслеживания настроения и привычек
+Обработчики для отслеживания жизненных показателей
 """
 
 import logging
@@ -79,26 +79,50 @@ async def habits_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 *Популярные привычки:*
     """
     
-    popular_habits = [
-        "exercise", "meditation", "reading", "drinking_water",
-        "sleep_early", "healthy_eating", "journaling", "walking"
-    ]
+    # Группируем привычки по категориям
+    habit_categories = {
+        "🏃‍♂️ Здоровье": [
+            "exercise", "meditation", "drinking_water", "sleep_early", 
+            "healthy_eating", "walking", "stretching", "vitamins"
+        ],
+        "📚 Развитие": [
+            "reading", "journaling", "learning", "practice_skills", 
+            "planning", "goal_review"
+        ],
+        "💼 Продуктивность": [
+            "morning_routine", "evening_routine", "time_tracking", 
+            "task_prioritization", "break_taking"
+        ],
+        "🧘‍♀️ Ментальное здоровье": [
+            "gratitude", "mindfulness", "social_connection", "hobby_time"
+        ]
+    }
     
     keyboard = []
-    for habit in popular_habits:
-        habit_name = habit.replace("_", " ").title()
-        keyboard.append(InlineKeyboardButton(
-            f"✅ {habit_name}", 
-            callback_data=f"habit_complete:{habit}"
-        ))
     
-    # Разбиваем на ряды по 2 кнопки
-    rows = [keyboard[i:i+2] for i in range(0, len(keyboard), 2)]
+    # Добавляем привычки по категориям
+    for category, habits in habit_categories.items():
+        # Добавляем заголовок категории
+        keyboard.append([InlineKeyboardButton(category, callback_data="habit_category_header")])
+        
+        # Добавляем привычки категории
+        for habit in habits:
+            habit_name = habit.replace("_", " ").title()
+            keyboard.append([InlineKeyboardButton(
+                f"✅ {habit_name}", 
+                callback_data=f"habit_complete:{habit}"
+            )])
+        
+        # Добавляем пустую строку между категориями
+        keyboard.append([])
     
-    # Добавляем кнопку для новой привычки
-    rows.append([InlineKeyboardButton("➕ Добавить свою", callback_data="add_custom_habit")])
+    # Добавляем кнопки управления
+    keyboard.append([
+        InlineKeyboardButton("➕ Добавить свою", callback_data="add_custom_habit"),
+        InlineKeyboardButton("📊 Статистика", callback_data="habits_stats")
+    ])
     
-    reply_markup = InlineKeyboardMarkup(rows)
+    reply_markup = InlineKeyboardMarkup(keyboard)
     
     await update.message.reply_text(
         habits_message,

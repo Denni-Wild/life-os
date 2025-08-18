@@ -76,18 +76,70 @@ class MemoryService:
         
         logger.info(f"Привычка сохранена: {habit}")
     
+    async def get_habits_stats(self) -> Dict[str, int]:
+        """Получить статистику привычек (количество выполнений каждой привычки)"""
+        habits_path = os.path.join(self.memory_path, "habits.md")
+        
+        if not os.path.exists(habits_path):
+            return {}
+        
+        try:
+            async with aiofiles.open(habits_path, 'r', encoding='utf-8') as f:
+                content = await f.read()
+            
+            habits_count = {}
+            lines = content.strip().split('\n')
+            
+            for line in lines:
+                if line.strip() and line.startswith('- ') and ' - ' in line:
+                    # Парсим строку: "- habit_name - timestamp"
+                    parts = line.strip().split(' - ')
+                    if len(parts) >= 2:
+                        habit_name = parts[0].replace('- ', '').strip()
+                        habits_count[habit_name] = habits_count.get(habit_name, 0) + 1
+            
+            return habits_count
+            
+        except Exception as e:
+            logger.error(f"Ошибка при чтении статистики привычек: {e}")
+            return {}
+    
     async def save_life_area_score(self, area: str, score: int, notes: Optional[str] = None) -> None:
-        """Сохранить оценку жизненной области"""
+        """Сохранить оценку жизненной области (обновляет существующую или добавляет новую)"""
         assessment_path = os.path.join(self.assessments_path, "current.md")
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
         
-        score_line = f"- {area}: {score}/10 ({timestamp})"
-        if notes:
-            score_line += f" - {notes}"
-        score_line += "\n"
+        # Читаем существующий файл
+        lines = []
+        if os.path.exists(assessment_path):
+            async with aiofiles.open(assessment_path, 'r', encoding='utf-8') as f:
+                lines = (await f.read()).split('\n')
         
-        async with aiofiles.open(assessment_path, 'a', encoding='utf-8') as f:
-            await f.write(score_line)
+        # Ищем существующую оценку для этой области
+        area_updated = False
+        new_lines = []
+        
+        for line in lines:
+            if line.strip().startswith(f'- {area}:'):
+                # Обновляем существующую оценку
+                new_line = f"- {area}: {score}/10 ({timestamp})"
+                if notes:
+                    new_line += f" - {notes}"
+                new_lines.append(new_line)
+                area_updated = True
+            else:
+                new_lines.append(line)
+        
+        # Если область не найдена, добавляем новую
+        if not area_updated:
+            new_line = f"- {area}: {score}/10 ({timestamp})"
+            if notes:
+                new_line += f" - {notes}"
+            new_lines.append(new_line)
+        
+        # Записываем обновленный файл
+        async with aiofiles.open(assessment_path, 'w', encoding='utf-8') as f:
+            await f.write('\n'.join(new_lines))
         
         logger.info(f"Оценка области '{area}' сохранена: {score}/10")
     
@@ -144,6 +196,32 @@ class MemoryService:
         
         # Преобразуем в список
         return [{"name": name, "score": score} for name, score in areas.items()]
+    
+    async def get_life_area_scores(self) -> Dict[str, int]:
+        """Получить текущие оценки жизненных областей в виде словаря"""
+        assessment_path = os.path.join(self.assessments_path, "current.md")
+        
+        if not os.path.exists(assessment_path):
+            return {}
+        
+        areas = {}
+        async with aiofiles.open(assessment_path, 'r', encoding='utf-8') as f:
+            content = await f.read()
+            
+        for line in content.split('\n'):
+            if line.strip().startswith('- ') and ':' in line:
+                # Парсим строку вида "- Область: 8/10 (2024-01-15 14:30)"
+                parts = line.replace('- ', '').split(':')
+                if len(parts) >= 2:
+                    area_name = parts[0].strip()
+                    score_part = parts[1].strip()
+                    
+                    # Извлекаем оценку
+                    if '/' in score_part:
+                        score = int(score_part.split('/')[0])
+                        areas[area_name] = score
+        
+        return areas
     
     async def complete_task(self, task_id: str) -> None:
         """Отметить задачу как выполненную"""
