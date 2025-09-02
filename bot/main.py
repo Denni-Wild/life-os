@@ -23,7 +23,8 @@ from .config import Config, load_config
 from .handlers import (
     start_handler, help_handler, capture_handler, tasks_handler,
     status_handler, review_handler, assess_handler, schedule_handler,
-    mood_handler, habits_handler, unknown_handler
+    mood_handler, habits_handler, unknown_handler,
+    voice_handler, voice_callback_handler, text_edit_handler
 )
 from .services.todoist_service import TodoistService
 from .services.memory_service import MemoryService
@@ -83,7 +84,12 @@ class LifeOSBot:
         # Обработка callback запросов (кнопки)
         self.application.add_handler(CallbackQueryHandler(self.handle_callback))
         
-        # Обработка обычных сообщений для быстрого захвата
+        # Обработка голосовых сообщений
+        self.application.add_handler(
+            MessageHandler(filters.VOICE, voice_handler)
+        )
+        
+        # Обработка обычных сообщений для быстрого захвата и редактирования
         self.application.add_handler(
             MessageHandler(
                 filters.TEXT & ~filters.COMMAND, 
@@ -122,15 +128,25 @@ class LifeOSBot:
                 content = data.split(":", 1)[1]
                 await self.capture_idea(content, update.effective_chat.id)
                 await query.edit_message_text("💡 Идея захвачена")
+            elif data.startswith("voice_"):
+                # Обрабатываем голосовые callback через voice_callback_handler
+                await voice_callback_handler(update, context)
             
         except Exception as e:
             logger.error(f"Ошибка при обработке callback: {e}")
             await query.edit_message_text("❌ Произошла ошибка при обработке запроса")
     
     async def handle_text_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Обработка обычных текстовых сообщений для быстрого захвата"""
+        """Обработка обычных текстовых сообщений для быстрого захвата и редактирования"""
         text = update.message.text
         chat_id = update.effective_chat.id
+        
+        # Сначала проверяем, не является ли это редактированием голосового сообщения
+        try:
+            await text_edit_handler(update, context)
+            return
+        except Exception:
+            pass  # Если не редактирование, продолжаем обычную обработку
         
         # Если сообщение короткое, предлагаем захватить
         if len(text) < 100:
